@@ -5,6 +5,8 @@ require('dotenv').config();
 
 const areceber = require('./src/areceber/index.js');
 const recebido = require('./src/recebido/index.js');
+const recebido_mes = require('./src/recebido_mes/index.js');
+const areceber_mes = require('./src/areceber_mes/index.js');
 
 const formatarDinheiro = (valor) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -50,6 +52,34 @@ app.get('/recebido', async (req, res) => {
   try {
     // Chame a função que você criou
     const somaValores = await recebido();
+    const valorFormatado = formatarDinheiro(somaValores);
+    // Envie a resposta como JSON
+    res.json({ total: valorFormatado });
+  } catch (error) {
+    console.error('Erro na API:', error.message);
+    // Em caso de erro, envie uma resposta de erro
+    res.status(500).json({ error: 'Erro ao consultar valores' });
+  }
+});
+
+app.get('/recebido-mes', async (req, res) => {
+  try {
+    // Chame a função que você criou
+    const somaValores = await recebido_mes();
+    const valorFormatado = formatarDinheiro(somaValores);
+    // Envie a resposta como JSON
+    res.json({ total: valorFormatado });
+  } catch (error) {
+    console.error('Erro na API:', error.message);
+    // Em caso de erro, envie uma resposta de erro
+    res.status(500).json({ error: 'Erro ao consultar valores' });
+  }
+});
+
+app.get('/areceber-mes', async (req, res) => {
+  try {
+    // Chame a função que você criou
+    const somaValores = await areceber_mes();
     const valorFormatado = formatarDinheiro(somaValores);
     // Envie a resposta como JSON
     res.json({ total: valorFormatado });

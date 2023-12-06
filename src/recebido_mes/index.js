@@ -1,14 +1,23 @@
 const axios = require('axios');
-const { format } = require('date-fns');
+const { format, startOfMonth, endOfMonth } = require('date-fns');
 require('dotenv').config();
 
 const baseURL = process.env.API_URL;
 const token = process.env.API_TOKEN;
 
-// Função para obter a data de hoje
-function obterDataAtual() {
-  const hoje = new Date();
-  return format(hoje, 'yyyy-MM-dd');
+// Função para obter a data formatada
+function obterDataFormatada(date) {
+  return format(date, 'yyyy-MM-dd');
+}
+
+// Função para obter o primeiro dia do mês
+function obterPrimeiroDiaDoMes() {
+  return obterDataFormatada(startOfMonth(new Date()));
+}
+
+// Função para obter o último dia do mês
+function obterUltimoDiaDoMes() {
+  return obterDataFormatada(endOfMonth(new Date()));
 }
 
 // Função para converter string em número e tratar valores nulos ou vazios
@@ -31,10 +40,11 @@ async function listarRegistros() {
     'ixcsoft': 'listar'
   };
 
-  // Obter data atual
-  const hoje = obterDataAtual();
-  console.log(hoje)
-  const gridParamString = `[{\"TB\":\"fn_areceber.credito_data\", \"OP\" : \"=\", \"P\" : \"${hoje}\"}]`;
+  // Obter primeiro e último dia do mês
+  const primeiroDiaDoMes = obterPrimeiroDiaDoMes();
+  const ultimoDiaDoMes = obterUltimoDiaDoMes();
+
+  const gridParamString = `[{\"TB\":\"fn_areceber.credito_data\", \"OP\" : \">=\", \"P\" : \"${primeiroDiaDoMes}\"},{\"TB\":\"fn_areceber.credito_data\", \"OP\" : \"<=\", \"P\" : \"${ultimoDiaDoMes}\"}]`;
 
   const data = {
     qtype: 'fn_areceber.status',
@@ -51,11 +61,11 @@ async function listarRegistros() {
   const jsonString = JSON.stringify(data);
 
   try {
-    const response = await axios.post(url, jsonString, { headers, timeout: 600000  });
-    console.log(response)
+    const response = await axios.post(url, jsonString, { headers, timeout: 600000 });
+    console.log(response);
     const registros = response.data.registros || [];
-    console.log(registros)
-    
+    console.log(registros);
+
     // Somar os valores abertos
     const somaValores = registros.reduce((total, resultado) => {
       const valorAberto = parseNumber(resultado.valor_recebido);

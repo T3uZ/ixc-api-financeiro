@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { format } = require('date-fns');
+const { format, startOfMonth, endOfMonth } = require('date-fns');
 require('dotenv').config();
 
 const baseURL = process.env.API_URL;
@@ -31,14 +31,15 @@ async function listarRegistros() {
     'ixcsoft': 'listar'
   };
 
-  // Obter data atual
-  const hoje = obterDataAtual();
-  console.log(hoje)
-  const gridParamString = `[{\"TB\":\"fn_areceber.credito_data\", \"OP\" : \"=\", \"P\" : \"${hoje}\"}]`;
+  // Obter data do início e fim do mês
+  const primeiroDiaDoMes = startOfMonth(new Date());
+  const ultimoDiaDoMes = endOfMonth(new Date());
+
+  const gridParamString = `[{\"TB\":\"fn_areceber.data_vencimento\", \"OP\" : \">=\", \"P\" : \"${format(primeiroDiaDoMes, 'yyyy-MM-dd')}\"}, {\"TB\":\"fn_areceber.data_vencimento\", \"OP\" : \"<=\", \"P\" : \"${format(ultimoDiaDoMes, 'yyyy-MM-dd')}\"}]`;
 
   const data = {
     qtype: 'fn_areceber.status',
-    query: 'R',
+    query: 'A',
     oper: '=',
     page: '1',
     rp: '100000',
@@ -51,14 +52,14 @@ async function listarRegistros() {
   const jsonString = JSON.stringify(data);
 
   try {
-    const response = await axios.post(url, jsonString, { headers, timeout: 600000  });
-    console.log(response)
+    const response = await axios.post(url, jsonString, { headers, timeout: 600000 });
+    console.log(response);
     const registros = response.data.registros || [];
-    console.log(registros)
-    
+    console.log(registros);
+
     // Somar os valores abertos
     const somaValores = registros.reduce((total, resultado) => {
-      const valorAberto = parseNumber(resultado.valor_recebido);
+      const valorAberto = parseNumber(resultado.valor);
       return total + valorAberto;
     }, 0);
 
