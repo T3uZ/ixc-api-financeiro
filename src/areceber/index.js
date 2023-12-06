@@ -1,5 +1,3 @@
-// server.js
-
 const axios = require('axios');
 const { format } = require('date-fns');
 require('dotenv').config();
@@ -35,27 +33,32 @@ async function listarRegistros() {
 
   // Obter data atual
   const hoje = obterDataAtual();
-
-  const gridParamString = `[{\"TB\":\"fn_areceber.data_vencimento\", \"OP\" : \"=\", \"P\" : \"${hoje}\"},{\"TB\":\"fn_areceber.status\", \"OP\" : \"=\", \"P\" : \"A\"}]`;
+  console.log(hoje)
+  const gridParamString = `[{\"TB\":\"fn_areceber.data_vencimento\", \"OP\" : \"=\", \"P\" : \"${hoje}\"}]`;
 
   const data = {
-    qtype: 'fn_areceber.id',
-    query: '',
-    oper: '!=',
+    qtype: 'fn_areceber.status',
+    query: 'A',
+    oper: '=',
     page: '1',
-    rp: '1000000',
+    rp: '100000',
     sortname: 'fn_areceber.id',
     sortorder: 'desc',
     grid_param: gridParamString
   };
 
+  // Convertendo o objeto para uma string JSON manualmente
+  const jsonString = JSON.stringify(data);
+
   try {
-    const response = await axios.post(url, data, { headers });
+    const response = await axios.post(url, jsonString, { headers, timeout: 600000  });
+    console.log(response)
     const registros = response.data.registros || [];
+    console.log(registros)
     
     // Somar os valores abertos
     const somaValores = registros.reduce((total, resultado) => {
-      const valorAberto = parseNumber(resultado.valor_aberto);
+      const valorAberto = parseNumber(resultado.valor);
       return total + valorAberto;
     }, 0);
 
